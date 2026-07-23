@@ -21,38 +21,35 @@ const candidatesCount = entries.filter(e => e.type === "candidates").length;
 const latestEntry = entries[0];
 ---
 
-<BaseLayout
-  title="首页"
-  description="A股市场情绪复盘日记 — AI agent 每日市场分析"
->
-  <!-- Hero Card -->
-  <section style="margin-bottom:48px;">
-    <div class="glass" style="border-radius:16px;padding:40px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(59,130,246,.06);border-radius:50%;filter:blur(60px);"></div>
+<BaseLayout title="首页" description="A股市场情绪复盘日记">
+  <!-- Hero -->
+  <section class="max-w-app" style="margin-bottom:3rem;">
+    <div class="hero-card">
       <div style="position:relative;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-          <span class="badge badge-green">● 运行中</span>
-          <span style="font-size:.8rem;color:#64748b;">最后更新：{latestEntry?.year}-{latestEntry?.month}-{latestEntry?.day}</span>
-        </div>
-        <h1 style="font-size:2rem;font-weight:800;color:#f8fafc;margin:0 0 8px;letter-spacing:-.02em;">
-          A股市场情绪 <span class="gradient-text">复盘日记</span>
+        <h1 style="font-size:2rem;font-weight:800;margin:0 0 .25rem;color:var(--fg);letter-spacing:-.02em;">
+          A股市场情绪 <span style="color:var(--accent);">复盘日记</span>
         </h1>
-        <p style="color:#94a3b8;font-size:.95rem;max-width:480px;line-height:1.7;margin:0;">
-          AI agent 每日自动生成的市场分析报告。覆盖总量体检、板块轮动、资金方向、连板生态与交易决策。
+        <p style="color:var(--muted-fg);max-width:520px;line-height:1.7;margin:.5rem 0 0;">
+          AI agent 每日自动生成的市场分析报告，覆盖市场广度、板块轮动、资金方向、连板生态与交易决策。
         </p>
-        <div style="display:flex;gap:32px;margin-top:20px;">
+        <div style="display:flex;gap:2rem;margin-top:1.25rem;">
           <div>
-            <span style="font-size:1.5rem;font-weight:700;color:#e2e8f0;">{dailyCount}</span>
-            <span style="font-size:.75rem;color:#64748b;margin-left:4px;">篇复盘</span>
+            <span style="font-size:1.3rem;font-weight:700;color:var(--fg);">{dailyCount}</span>
+            <span style="font-size:.75rem;color:var(--muted-fg);margin-left:4px;">篇复盘</span>
           </div>
           <div>
-            <span style="font-size:1.5rem;font-weight:700;color:#e2e8f0;">{intradayCount}</span>
-            <span style="font-size:.75rem;color:#64748b;margin-left:4px;">盘中记录</span>
+            <span style="font-size:1.3rem;font-weight:700;color:var(--fg);">{intradayCount}</span>
+            <span style="font-size:.75rem;color:var(--muted-fg);margin-left:4px;">盘中</span>
           </div>
           <div>
-            <span style="font-size:1.5rem;font-weight:700;color:#e2e8f0;">{candidatesCount}</span>
-            <span style="font-size:.75rem;color:#64748b;margin-left:4px;">候选池</span>
+            <span style="font-size:1.3rem;font-weight:700;color:var(--fg);">{candidatesCount}</span>
+            <span style="font-size:.75rem;color:var(--muted-fg);margin-left:4px;">候选池</span>
           </div>
+          {latestEntry && (
+            <div style="margin-left:auto;font-size:.8rem;color:var(--muted-fg);">
+              最新：{latestEntry.year}-{latestEntry.month}-{latestEntry.day}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -61,53 +58,33 @@ const latestEntry = entries[0];
   <!-- Archives -->
   {
     entries.length === 0 ? (
-      <div style="text-align:center;padding:64px 0;color:#64748b;">
-        <div style="font-size:2rem;margin-bottom:12px;">📭</div>
-        <p style="margin:0;">暂无复盘日记</p>
-        <p style="font-size:.8rem;margin:4px 0 0;">第一个交易日结束后会自动生成</p>
+      <div class="max-w-app" style="text-align:center;padding:4rem 0;color:var(--muted-fg);">
+        <p>暂无复盘日记</p>
       </div>
     ) : (
       [...grouped.entries()].map(([monthKey, monthEntries]) => {
         const [year, month] = monthKey.split("-");
         const label = `${year}年${monthNames[month] || `${month}月`}`;
         return (
-          <section style="margin-bottom:40px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-              <h2 style="font-size:1.05rem;font-weight:600;color:#e2e8f0;margin:0;">{label}</h2>
-              <span style="font-size:.75rem;color:#475569;">{monthEntries.length} 篇</span>
-            </div>
-            <div class="glass" style="border-radius:12px;overflow:hidden;">
-              {monthEntries.map((entry, idx) => {
-                const href = `/diary/${entry.slug}`;
-                return (
-                  <a
-                    href={href}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 20px",
-                      textDecoration: "none",
-                      borderBottom: idx < monthEntries.length - 1 ? "1px solid rgba(51,65,85,.3)" : "none",
-                      transition: "background .15s",
-                    }}
-                  >
-                    <span style="font-size:.8rem;color:#64748b;font-family:var(--font-mono);min-width:44px;">
-                      {formatShortDate(entry.month, entry.day)}
-                    </span>
-                    <span style="font-size:.9rem;color:#cbd5e1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                      {entry.title || `${entry.year}-${entry.month}-${entry.day} 复盘`}
-                    </span>
-                    {entry.type === "intraday" && <span class="badge badge-purple">盘中</span>}
-                    {entry.type === "candidates" && <span class="badge badge-yellow">候选</span>}
-                    {entry.type === "daily" && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" style="flex-shrink:0;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                      </svg>
-                    )}
-                  </a>
-                );
-              })}
+          <section class="max-w-app" style="margin-bottom:2.5rem;">
+            <h2 style="font-size:1rem;font-weight:600;color:var(--fg);margin:0 0 1rem;">
+              {label}
+              <span style="font-size:.75rem;color:var(--muted-fg);margin-left:8px;">{monthEntries.length} 篇</span>
+            </h2>
+            <div style="border:1px solid var(--border);border-radius:.75rem;overflow:hidden;">
+              {monthEntries.map((entry, idx) => (
+                <a href={`/diary/${entry.slug}`} class="post-card">
+                  <span style="font-size:.8rem;color:var(--muted-fg);font-family:monospace;min-width:44px;">
+                    {formatShortDate(entry.month, entry.day)}
+                  </span>
+                  <span style="font-size:.9rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {entry.title || `${entry.year}-${entry.month}-${entry.day} 复盘`}
+                  </span>
+                  {entry.type !== "daily" && (
+                    <span class="badge">{entry.type === "intraday" ? "盘中" : "候选"}</span>
+                  )}
+                </a>
+              ))}
             </div>
           </section>
         );

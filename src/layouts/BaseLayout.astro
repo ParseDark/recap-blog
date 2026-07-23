@@ -6,20 +6,22 @@ export interface Props {
   description?: string;
   ogImage?: string;
   date?: Date;
+  author?: string;
 }
 
 const {
   title,
   description = "A股市场情绪复盘日记 — AI agent 每日市场分析",
-  ogImage = "/og-default.png",
+  ogImage,
   date,
 } = Astro.props;
 
 const fullTitle = `${title} | A股复盘日记`;
+const siteTitle = "A股复盘日记";
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,8 +30,8 @@ const fullTitle = `${title} | A股复盘日记`;
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={date ? "article" : "website"} />
-    <meta property="og:site_name" content="A股复盘日记" />
-    <meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+    <meta property="og:site_name" content={siteTitle} />
+    {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site).href} />}
     <meta property="og:locale" content="zh_CN" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
@@ -40,32 +42,90 @@ const fullTitle = `${title} | A股复盘日记`;
     <link rel="sitemap" type="application/xml" href={new URL("/sitemap.xml", Astro.site).href} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body style="margin:0;min-height:100vh;display:flex;flex-direction:column;">
+  <body>
     <!-- Header -->
-    <header style="position:sticky;top:0;z-index:50;background:rgba(15,23,42,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(51,65,85,.4);">
-      <div style="max-width:860px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;">
-        <a href="/" style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.1rem;text-decoration:none;color:#f1f5f9;">
-          <span style="font-size:1.15rem;">📊</span>
-          <span class="gradient-text">A股复盘日记</span>
+    <header class="site-header">
+      <div class="max-w-app" style="display:flex;align-items:center;justify-content:space-between;height:56px;">
+        <a href="/" style="font-size:1.1rem;font-weight:700;text-decoration:none;color:var(--fg);">
+          📊 {siteTitle}
         </a>
-        <nav style="display:flex;align-items:center;gap:20px;">
-          <a href="/" style="font-size:.85rem;color:#94a3b8;text-decoration:none;">首页</a>
-          <a href="/rss.xml" target="_blank" style="font-size:.85rem;color:#94a3b8;text-decoration:none;display:flex;align-items:center;gap:4px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.18 15.64a2.18 2.18 0 010 4.36 2.18 2.18 0 010-4.36M4 4.44A15.56 15.56 0 0119.56 20h-2.83A12.73 12.73 0 004 7.27z"/></svg>
-            RSS
-          </a>
+        <nav style="display:flex;align-items:center;gap:8px;">
+          <a href="/" class:list={["active", Astro.url.pathname === "/"]}>首页</a>
+          <a href="/rss.xml" target="_blank">RSS</a>
+          <!-- Theme toggle -->
+          <button id="theme-toggle" class="theme-btn" aria-label="切换主题">
+            <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
         </nav>
       </div>
     </header>
 
     <!-- Main -->
-    <main style="flex:1;max-width:860px;margin:0 auto;padding:32px 24px;width:100%;box-sizing:border-box;">
+    <main style="padding:2rem 0 4rem;">
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer style="border-top:1px solid rgba(51,65,85,.3);padding:24px;text-align:center;color:#64748b;font-size:.75rem;">
-      A股市场情绪复盘日记 · AI agent 每日分析生成 · {new Date().getFullYear()}
+    <footer style="border-top:1px solid var(--border);padding:2rem 0;text-align:center;color:var(--muted-fg);font-size:.8rem;">
+      <div class="max-w-app">
+        {siteTitle} · AI agent 每日分析生成 · {new Date().getFullYear()}
+      </div>
     </footer>
+
+    <!-- Progress bar -->
+    <div id="progress-bar" class="progress-bar" style="width:0%;"></div>
   </body>
+
+  <script is:inline>
+    // Theme toggle
+    (function() {
+      const STORAGE_KEY = "theme";
+      const html = document.documentElement;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = stored || (prefersDark ? "dark" : "light");
+      html.setAttribute("data-theme", theme);
+
+      const toggle = document.getElementById("theme-toggle");
+      const sunIcon = document.getElementById("sun-icon");
+      const moonIcon = document.getElementById("moon-icon");
+
+      function updateIcons(t) {
+        sunIcon.style.display = t === "dark" ? "none" : "block";
+        moonIcon.style.display = t === "dark" ? "block" : "none";
+      }
+
+      updateIcons(theme);
+
+      toggle?.addEventListener("click", () => {
+        const current = html.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", next);
+        localStorage.setItem(STORAGE_KEY, next);
+        updateIcons(next);
+      });
+
+      // Listen for system changes
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+        if (!localStorage.getItem(STORAGE_KEY)) {
+          const t = e.matches ? "dark" : "light";
+          html.setAttribute("data-theme", t);
+          updateIcons(t);
+        }
+      });
+    })();
+
+    // Scroll progress bar
+    window.addEventListener("scroll", () => {
+      const bar = document.getElementById("progress-bar");
+      if (!bar) return;
+      const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      bar.style.width = h > 0 ? ((window.scrollY / h) * 100) + "%" : "0%";
+    });
+  </script>
 </html>

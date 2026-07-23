@@ -33,14 +33,11 @@ if (!rawMd) {
 
 const titleMatch = rawMd.match(/^#\s+(.+?)(?:\s*\{.*\})?\s*$/m);
 const pageTitle = titleMatch ? titleMatch[1].trim() : `${entry.year}-${entry.month}-${entry.day} 复盘`;
-
-const descLine = rawMd.split("\n").filter((l) => l.trim() && !l.startsWith("#") && !l.startsWith(">")).slice(0, 2).join(" ").slice(0, 160);
+const desc = rawMd.split("\n").filter(l => l.trim() && !l.startsWith("#") && !l.startsWith(">")).slice(0, 2).join(" ").slice(0, 160);
+const dateStr = `${entry.year}-${entry.month}-${entry.day}`;
 
 function typeLabel(t: DiaryEntry["type"]) {
   return t === "daily" ? "收盘复盘" : t === "intraday" ? "盘中记录" : "候选标的";
-}
-function typeBadge(t: DiaryEntry["type"]) {
-  return t === "daily" ? "badge-green" : t === "intraday" ? "badge-purple" : "badge-yellow";
 }
 
 function renderMD(md: string): string {
@@ -58,7 +55,9 @@ function renderMD(md: string): string {
   const tr = /^\|(.+)\|\n\|[-| :]+\|\n((?:^\|.+\|\n?)+)/gm;
   html = html.replace(tr, (_m, hdr, body) => {
     const hs = hdr.split("|").map((h: string) => h.trim()).filter(Boolean);
-    const rows = body.trim().split("\n").map((r: string) => r.split("|").map((c: string) => c.trim()).filter(Boolean));
+    const rows = body.trim().split("\n").map((r: string) =>
+      r.split("|").map((c: string) => c.trim()).filter(Boolean)
+    );
     let t = "<table><thead><tr>";
     for (const h of hs) t += `<th>${h}</th>`;
     t += "</tr></thead><tbody>";
@@ -66,8 +65,9 @@ function renderMD(md: string): string {
     t += "</tbody></table>";
     return t;
   });
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
-    return `<pre><code>${code.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code></pre>`;
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, code) => {
+    const esc = code.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    return `<pre><code>${esc}</code></pre>`;
   });
   const lines = html.split("\n");
   const res: string[] = [];
@@ -84,61 +84,58 @@ function renderMD(md: string): string {
 }
 
 const contentHtml = renderMD(rawMd);
-const dateStr = `${entry.year}-${entry.month}-${entry.day}`;
 
-const allDaily = getDiaryEntries().filter((e) => e.type === "daily");
-const curIdx = allDaily.findIndex((e) => e.slug === entry.slug);
+const allDaily = getDiaryEntries().filter(e => e.type === "daily");
+const curIdx = allDaily.findIndex(e => e.slug === entry.slug);
 const prevEntry = curIdx < allDaily.length - 1 ? allDaily[curIdx + 1] : null;
 const nextEntry = curIdx > 0 ? allDaily[curIdx - 1] : null;
 ---
 
-<BaseLayout
-  title={pageTitle}
-  description={descLine}
-  date={new Date(dateStr + "T15:00:00+08:00")}
->
-  <!-- Back link -->
-  <a href="/" style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:#64748b;text-decoration:none;margin-bottom:24px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-    </svg>
-    返回首页
-  </a>
+<BaseLayout title={pageTitle} description={desc} date={new Date(dateStr + "T15:00:00+08:00")}>
+  <div class="max-w-app">
+    <!-- Back -->
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+      返回首页
+    </a>
 
-  <!-- Article -->
-  <article class="glass" style="border-radius:16px;padding:32px;">
-    <!-- Header -->
-    <header style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid rgba(51,65,85,.4);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <time style="font-size:.8rem;color:#64748b;font-family:var(--font-mono);">{dateStr}</time>
-        <span class={`badge ${typeBadge(entry.type)}`}>{typeLabel(entry.type)}</span>
-      </div>
-      <h1 style="font-size:1.6rem;font-weight:700;color:#f8fafc;line-height:1.4;margin:0;letter-spacing:-.01em;">
+    <!-- Article -->
+    <article class="article-card" data-pagefind-body>
+      <!-- Title -->
+      <h1 style="color:var(--accent);font-size:1.5rem;font-weight:700;line-height:1.4;margin:0 0 .5rem;">
         {pageTitle}
       </h1>
-    </header>
 
-    <!-- Content -->
-    <div class="prose" set:html={contentHtml} />
-  </article>
+      <!-- Meta -->
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:2rem;color:var(--muted-fg);font-size:.85rem;">
+        <span>{dateStr}</span>
+        <span class="badge">{typeLabel(entry.type)}</span>
+      </div>
 
-  <!-- Prev / Next -->
-  <nav style="display:flex;gap:16px;margin-top:32px;">
-    {prevEntry ? (
-      <a href={`/diary/${prevEntry.slug}`} class="glass" style="flex:1;border-radius:12px;padding:16px 20px;text-decoration:none;">
-        <div style="font-size:.75rem;color:#64748b;margin-bottom:4px;">← 上一篇</div>
-        <div style="font-size:.85rem;color:#cbd5e1;">
-          {prevEntry.title || `${prevEntry.year}-${prevEntry.month}-${prevEntry.day}`}
-        </div>
-      </a>
-    ) : <div style="flex:1;" />}
-    {nextEntry ? (
-      <a href={`/diary/${nextEntry.slug}`} class="glass" style="flex:1;border-radius:12px;padding:16px 20px;text-decoration:none;text-align:right;">
-        <div style="font-size:.75rem;color:#64748b;margin-bottom:4px;">下一篇 →</div>
-        <div style="font-size:.85rem;color:#cbd5e1;">
-          {nextEntry.title || `${nextEntry.year}-${nextEntry.month}-${nextEntry.day}`}
-        </div>
-      </a>
-    ) : <div style="flex:1;" />}
-  </nav>
+      <!-- Content -->
+      <div class="prose" set:html={contentHtml} />
+    </article>
+
+    <!-- Prev / Next -->
+    <nav style="display:flex;gap:1rem;margin-top:2rem;">
+      {prevEntry ? (
+        <a href={`/diary/${prevEntry.slug}`} class="nav-card">
+          <div style="font-size:.75rem;color:var(--muted-fg);margin-bottom:4px;">← 上一篇</div>
+          <div style="font-size:.85rem;">
+            {prevEntry.title || `${prevEntry.year}-${prevEntry.month}-${prevEntry.day}`}
+          </div>
+        </a>
+      ) : <div style="flex:1;" />}
+      {nextEntry ? (
+        <a href={`/diary/${nextEntry.slug}`} class="nav-card" style="text-align:right;">
+          <div style="font-size:.75rem;color:var(--muted-fg);margin-bottom:4px;">下一篇 →</div>
+          <div style="font-size:.85rem;">
+            {nextEntry.title || `${nextEntry.year}-${nextEntry.month}-${nextEntry.day}`}
+          </div>
+        </a>
+      ) : <div style="flex:1;" />}
+    </nav>
+  </div>
 </BaseLayout>
