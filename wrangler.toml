@@ -1,0 +1,11 @@
+# Cloudflare Pages config for recap-blog
+# Deploy via: wrangler pages deploy dist/ --project-name recap-blog
+
+name = "recap-blog"
+compatibility_date = "2024-01-01"
+
+# Pages-specific settings
+pages_build_output_dir = "dist"
+
+[vars]
+SITE_URL = "https://recap-blog.pages.dev"

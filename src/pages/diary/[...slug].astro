@@ -1,0 +1,144 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDiaryEntries, type DiaryEntry } from "../../utils/diary";
+
+export async function getStaticPaths() {
+  const entries = getDiaryEntries();
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props as { entry: DiaryEntry };
+
+const modules = import.meta.glob<string>(
+  "../../content/diary/**/*.md",
+  { query: "?raw", eager: true, import: "default" }
+);
+
+let rawMd = "";
+for (const [key, mod] of Object.entries(modules)) {
+  if (key === entry.filePath || key.endsWith(entry.filePath)) { rawMd = mod; break; }
+}
+if (!rawMd) {
+  for (const [key, mod] of Object.entries(modules)) {
+    if (key.includes(`${entry.year}/${entry.month}/${entry.day}`)) {
+      const kt = key.includes(".intraday") || key.includes("-midday") ? "intraday"
+        : key.includes(".candidates") ? "candidates" : "daily";
+      if (kt === entry.type) { rawMd = mod; break; }
+    }
+  }
+}
+
+const titleMatch = rawMd.match(/^#\s+(.+?)(?:\s*\{.*\})?\s*$/m);
+const pageTitle = titleMatch ? titleMatch[1].trim() : `${entry.year}-${entry.month}-${entry.day} 复盘`;
+
+const descLine = rawMd.split("\n").filter((l) => l.trim() && !l.startsWith("#") && !l.startsWith(">")).slice(0, 2).join(" ").slice(0, 160);
+
+function typeLabel(t: DiaryEntry["type"]) {
+  return t === "daily" ? "收盘复盘" : t === "intraday" ? "盘中记录" : "候选标的";
+}
+function typeBadge(t: DiaryEntry["type"]) {
+  return t === "daily" ? "badge-green" : t === "intraday" ? "badge-purple" : "badge-yellow";
+}
+
+function renderMD(md: string): string {
+  let html = md;
+  html = html.replace(/^# .+\n?$/gm, "");
+  html = html.replace(/^#### (.+)$/gm, "<h4>$1</h4>");
+  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^---$/gm, "<hr>");
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/^> (.+)$/gm, "<blockquote><p>$1</p></blockquote>");
+  html = html.replace(/<\/blockquote>\n<blockquote>/g, "\n");
+  const tr = /^\|(.+)\|\n\|[-| :]+\|\n((?:^\|.+\|\n?)+)/gm;
+  html = html.replace(tr, (_m, hdr, body) => {
+    const hs = hdr.split("|").map((h: string) => h.trim()).filter(Boolean);
+    const rows = body.trim().split("\n").map((r: string) => r.split("|").map((c: string) => c.trim()).filter(Boolean));
+    let t = "<table><thead><tr>";
+    for (const h of hs) t += `<th>${h}</th>`;
+    t += "</tr></thead><tbody>";
+    for (const row of rows) { t += "<tr>"; for (const c of row) t += `<td>${c}</td>`; t += "</tr>"; }
+    t += "</tbody></table>";
+    return t;
+  });
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
+    return `<pre><code>${code.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</code></pre>`;
+  });
+  const lines = html.split("\n");
+  const res: string[] = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    if (/^<(\/)?(h[1-6]|table|thead|tbody|tr|t[dh]|pre|code|hr|blockquote|ul|ol|li)/.test(t)) {
+      res.push(t);
+    } else {
+      res.push(`<p>${t}</p>`);
+    }
+  }
+  return res.join("\n");
+}
+
+const contentHtml = renderMD(rawMd);
+const dateStr = `${entry.year}-${entry.month}-${entry.day}`;
+
+const allDaily = getDiaryEntries().filter((e) => e.type === "daily");
+const curIdx = allDaily.findIndex((e) => e.slug === entry.slug);
+const prevEntry = curIdx < allDaily.length - 1 ? allDaily[curIdx + 1] : null;
+const nextEntry = curIdx > 0 ? allDaily[curIdx - 1] : null;
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={descLine}
+  date={new Date(dateStr + "T15:00:00+08:00")}
+>
+  <!-- Back link -->
+  <a href="/" style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:#64748b;text-decoration:none;margin-bottom:24px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    返回首页
+  </a>
+
+  <!-- Article -->
+  <article class="glass" style="border-radius:16px;padding:32px;">
+    <!-- Header -->
+    <header style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid rgba(51,65,85,.4);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <time style="font-size:.8rem;color:#64748b;font-family:var(--font-mono);">{dateStr}</time>
+        <span class={`badge ${typeBadge(entry.type)}`}>{typeLabel(entry.type)}</span>
+      </div>
+      <h1 style="font-size:1.6rem;font-weight:700;color:#f8fafc;line-height:1.4;margin:0;letter-spacing:-.01em;">
+        {pageTitle}
+      </h1>
+    </header>
+
+    <!-- Content -->
+    <div class="prose" set:html={contentHtml} />
+  </article>
+
+  <!-- Prev / Next -->
+  <nav style="display:flex;gap:16px;margin-top:32px;">
+    {prevEntry ? (
+      <a href={`/diary/${prevEntry.slug}`} class="glass" style="flex:1;border-radius:12px;padding:16px 20px;text-decoration:none;">
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:4px;">← 上一篇</div>
+        <div style="font-size:.85rem;color:#cbd5e1;">
+          {prevEntry.title || `${prevEntry.year}-${prevEntry.month}-${prevEntry.day}`}
+        </div>
+      </a>
+    ) : <div style="flex:1;" />}
+    {nextEntry ? (
+      <a href={`/diary/${nextEntry.slug}`} class="glass" style="flex:1;border-radius:12px;padding:16px 20px;text-decoration:none;text-align:right;">
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:4px;">下一篇 →</div>
+        <div style="font-size:.85rem;color:#cbd5e1;">
+          {nextEntry.title || `${nextEntry.year}-${nextEntry.month}-${nextEntry.day}`}
+        </div>
+      </a>
+    ) : <div style="flex:1;" />}
+  </nav>
+</BaseLayout>

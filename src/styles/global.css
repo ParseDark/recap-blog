@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", Menlo, monospace;
+  --color-bg: #020617;
+  --color-surface: #0f172a;
+  --color-border: #1e293b;
+  --color-muted: #64748b;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #60a5fa, #22d3ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Prose content */
+.prose {
+  color: #cbd5e1;
+  line-height: 1.8;
+}
+.prose h2 {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.75rem;
+}
+.prose h3 {
+  color: #f1f5f9;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+.prose h4 {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+.prose p {
+  margin: 0.75rem 0;
+}
+.prose a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+.prose strong {
+  color: #f8fafc;
+  font-weight: 600;
+}
+.prose em {
+  font-style: italic;
+}
+.prose ul,
+.prose ol {
+  margin: 0.6rem 0;
+  padding-left: 1.5rem;
+}
+.prose li {
+  margin: 0.25rem 0;
+}
+.prose blockquote {
+  border-left: 2px solid #3b82f6;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  color: #94a3b8;
+  font-style: italic;
+}
+.prose blockquote p {
+  margin: 0.25rem 0;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid rgba(51, 65, 85, 0.5);
+  margin: 1.5rem 0;
+}
+
+/* Inline code */
+.prose :not(pre) > code {
+  background: rgba(30, 41, 59, 0.8);
+  color: #93c5fd;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* Code blocks */
+.prose pre {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+.prose pre code {
+  color: #e2e8f0;
+  background: transparent;
+  font-family: var(--font-mono);
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  display: block;
+  overflow-x: auto;
+}
+.prose thead {
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+}
+.prose th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  background: rgba(30, 41, 59, 0.4);
+}
+.prose td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+  white-space: nowrap;
+}
+.prose tbody tr:hover td {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+/* Badges */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+.badge-green {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+.badge-red {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+.badge-yellow {
+  background: rgba(234, 179, 8, 0.12);
+  color: #facc15;
+}
+.badge-purple {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
