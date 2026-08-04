@@ -26,7 +26,8 @@ if (!rawMd) {
     if (key.includes(`${entry.year}/${entry.month}/${entry.day}`)) {
       const kt = key.includes(".intraday") || key.includes("-midday") ? "intraday"
         : key.includes(".candidates") ? "candidates"
-        : key.includes(".watchlist") ? "watchlist" : "daily";
+        : key.includes(".watchlist") ? "watchlist"
+        : key.includes(".capital-quantile") ? "quantile" : "daily";
       if (kt === entry.type) { rawMd = mod; break; }
     }
   }
@@ -39,7 +40,7 @@ const dateStr = `${entry.year}-${entry.month}-${entry.day}`;
 
 function typeLabel(t: DiaryEntry["type"]) {
   return t === "daily" ? "收盘复盘" : t === "intraday" ? "盘中记录"
-    : t === "watchlist" ? "次日观察清单" : "候选标的";
+    : t === "watchlist" ? "次日观察清单" : t === "quantile" ? "资金分位专题" : "候选标的";
 }
 
 function renderMD(md: string): string {

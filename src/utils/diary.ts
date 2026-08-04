@@ -10,7 +10,7 @@ export interface DiaryEntry {
   year: string;
   month: string;
   day: string;
-  type: "daily" | "intraday" | "candidates" | "midday" | "watchlist";
+  type: "daily" | "intraday" | "candidates" | "midday" | "watchlist" | "quantile";
   filePath: string;
   title?: string;
 }
@@ -27,9 +27,9 @@ export function parseDiaryPath(filepath: string): DiaryEntry | null {
     .replace(/^.*diary\//, "")
     .replace(/\.(md|mdx)$/, "");
 
-  // Match: YYYY/MM/DD[.intraday|.candidates|.watchlist|-midday|.vN]
+  // Match: YYYY/MM/DD[.intraday|.candidates|.watchlist|.capital-quantile|-midday|.vN]
   const match = clean.match(
-    /^(\d{4})\/(\d{2})\/(\d{2})(?:[.-](intraday|candidates|midday|watchlist|v\d+))?$/
+    /^(\d{4})\/(\d{2})\/(\d{2})(?:[.-](intraday|candidates|midday|watchlist|capital-quantile|v\d+))?$/
   );
   if (!match) return null;
 
@@ -38,6 +38,7 @@ export function parseDiaryPath(filepath: string): DiaryEntry | null {
   if (typeStr === "intraday" || typeStr === "midday") type = "intraday";
   else if (typeStr === "candidates") type = "candidates";
   else if (typeStr === "watchlist") type = "watchlist";
+  else if (typeStr === "capital-quantile") type = "quantile";
   // v1/v2/v3 → treat as daily revision
   const slug = `${year}/${month}/${day}`;
   const shortSlug = type === "daily" ? slug : `${slug}/${type}`;
@@ -143,5 +144,7 @@ export function typeLabel(type: DiaryEntry["type"]): string {
       return "候选标的";
     case "watchlist":
       return "次日观察清单";
+    case "quantile":
+      return "资金分位专题";
   }
 }

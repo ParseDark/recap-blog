@@ -81,7 +81,11 @@ const latestEntry = entries[0];
                     {entry.title || `${entry.year}-${entry.month}-${entry.day} 复盘`}
                   </span>
                   {entry.type !== "daily" && (
-                    <span class="badge">{entry.type === "intraday" ? "盘中" : "候选"}</span>
+                    <span class="badge">
+                      {entry.type === "intraday" ? "盘中"
+                        : entry.type === "watchlist" ? "观察"
+                        : entry.type === "quantile" ? "资金分位" : "候选"}
+                    </span>
                   )}
                 </a>
               ))}
