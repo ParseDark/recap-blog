@@ -84,7 +84,8 @@ const latestEntry = entries[0];
                     <span class="badge">
                       {entry.type === "intraday" ? "盘中"
                         : entry.type === "watchlist" ? "观察"
-                        : entry.type === "quantile" ? "资金分位" : "候选"}
+                        : entry.type === "quantile" ? "资金分位"
+                        : entry.type === "signals" ? "信号" : "候选"}
                     </span>
                   )}
                 </a>
